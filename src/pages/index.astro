@@ -1,0 +1,25 @@
+---
+import BaseLayout from '../layouts/Base.astro';
+import { getPosts, pickBestImage } from '../lib/wp.js';
+
+const postsResp = await getPosts({ first: 24 });
+const posts = postsResp.nodes;
+const siteName = import.meta.env.SITE_NAME || 'News Site';
+---
+<BaseLayout title={siteName}>
+  <div class="grid">
+    {posts.map((p) => {
+      const img = pickBestImage(p);
+      return (
+        <a class="card" href={`/${p.slug}/`}>
+          {img && <img src={img.sourceUrl} alt="" loading="eager" width={img.width} height={img.height} />}
+          <div style="padding: .75rem 1rem;">
+            <div class="meta">{new Date(p.date).toLocaleDateString('hu-HU')}</div>
+            <h2 set:html={p.title} style="margin: 0;" />
+            <div class="meta">{p.categories?.nodes?.map(c => c.name).join(' · ')}</div>
+          </div>
+        </a>
+      );
+    })}
+  </div>
+</BaseLayout>

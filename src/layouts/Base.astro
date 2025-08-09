@@ -1,0 +1,77 @@
+---
+export interface Props {
+  title?: string;
+  description?: string;
+  noindex?: boolean;
+}
+const { title, description, noindex } = Astro.props;
+const siteName = import.meta.env.SITE_NAME || 'News Site';
+const siteUrl = import.meta.env.SITE_URL || 'https://example.com';
+const topBanner = import.meta.env.GAM_TOP_BANNER;
+---
+<!doctype html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{title ? `${title} – ${siteName}` : siteName}</title>
+  {description && <meta name="description" content={description} />}
+  <meta name="robots" content={noindex ? "noindex,nofollow" : "index,follow"} />
+  <!-- Discover large images -->
+  <meta name="robots" content="max-image-preview:large" />
+  <link rel="canonical" href={siteUrl + Astro.url.pathname} />
+  <link rel="alternate" type="application/rss+xml" title={siteName} href="/rss.xml" />
+  <meta property="og:site_name" content={siteName} />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content={siteUrl + Astro.url.pathname} />
+  <link rel="icon" href="/favicon.ico" />
+  <style>
+    :root {{ --w: 840px; }}
+    * {{ box-sizing: border-box; }}
+    body {{ margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial; line-height: 1.55; }}
+    header, main, footer {{ max-width: var(--w); margin: 0 auto; padding: 1rem; }}
+    a {{ color: inherit; text-decoration: none; }}
+    .grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }}
+    .card {{ border: 1px solid #eee; border-radius: 12px; overflow: hidden; background: #fff; transition: transform .08s ease; }}
+    .card:hover {{ transform: translateY(-2px); }}
+    .card img {{ width: 100%; height: auto; display: block; }}
+    .meta {{ color: #666; font-size: .9rem; margin: .25rem 0 .5rem; }}
+    .hero h1 {{ font-size: clamp(1.6rem, 3.5vw, 2.4rem); margin: .5rem 0; }}
+    .container {{ max-width: var(--w); margin: 0 auto; }}
+    .ad {{ display:flex; justify-content:center; align-items:center; background:#f6f6f6; border:1px dashed #ddd; border-radius:12px; padding:.5rem; margin:1rem 0; min-height:90px; }}
+  </style>
+
+  <!-- Google Publisher Tags (optional Google Ad Manager) -->
+  {topBanner && (
+    <script async src="https://securepubads.g.doubleclick.net/tag/js/gpt.js"></script>
+  )}
+</head>
+<body>
+  <header>
+    <a href="/"><strong>{siteName}</strong></a>
+  </header>
+
+  {topBanner && (
+    <div class="container">
+      <div id="div-gpt-ad-top" class="ad">Top banner</div>
+      <script>
+        window.googletag = window.googletag || {{cmd:[]}};
+        googletag.cmd.push(function() {{
+          const slot = googletag.defineSlot(topBanner, [[728,90],[970,250],[320,100],[320,50]], 'div-gpt-ad-top').addService(googletag.pubads());
+          googletag.pubads().enableLazyLoad();
+          googletag.enableServices();
+          googletag.display('div-gpt-ad-top');
+        }});
+      </script>
+    </div>
+  )}
+
+  <main>
+    <slot />
+  </main>
+
+  <footer>
+    <small>© {new Date().getFullYear()} {siteName}</small>
+  </footer>
+</body>
+</html>

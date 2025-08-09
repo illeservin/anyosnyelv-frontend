@@ -1,0 +1,55 @@
+---
+import BaseLayout from '../layouts/Base.astro';
+import { getPostBySlug, getPosts, pickBestImage } from '../lib/wp.js';
+
+export async function getStaticPaths() {
+  // Prebuild the latest 100 slugs; új buildkor frissül.
+  const posts = (await getPosts({ first: 100 })).nodes;
+  return posts.map(p => ({ params: { slug: p.slug } }));
+}
+
+const { slug } = Astro.params;
+const post = await getPostBySlug(slug);
+if (!post) {
+  return Astro.redirect('/');
+}
+const hero = pickBestImage(post);
+const siteName = import.meta.env.SITE_NAME || 'News Site';
+const siteUrl = import.meta.env.SITE_URL || 'https://example.com';
+const url = `${siteUrl}/${post.slug}/`;
+const headline = post.title.replace(/<[^>]+>/g, '');
+---
+<BaseLayout title={headline} description={post.excerpt && post.excerpt.replace(/<[^>]+>/g, '').slice(0,160)}>
+  <article>
+    {hero && <img src={hero.sourceUrl} alt="" width={hero.width} height={hero.height} loading="eager" />}
+    <header class="hero">
+      <h1 set:html={post.title} />
+      <div class="meta">
+        <time datetime={post.date}>{new Date(post.date).toLocaleString('hu-HU')}</time>
+        {post.author?.node?.name && <> · {post.author.node.name}</>}
+      </div>
+    </header>
+    <div class="container" style="padding: .5rem 0 2rem;">
+      <div class="article-body" set:html={post.content} />
+    </div>
+  </article>
+
+  <!-- NewsArticle JSON-LD -->
+  <script type="application/ld+json">
+    {JSON.stringify({
+      "@context":"https://schema.org",
+      "@type":"NewsArticle",
+      "headline": headline,
+      "datePublished": post.date,
+      "dateModified": post.modified || post.date,
+      "author": post.author?.node?.name ? {"@type":"Person","name":post.author.node.name} : undefined,
+      "mainEntityOfPage": url,
+      "image": hero ? [hero.sourceUrl] : undefined,
+      "publisher": {
+        "@type": "Organization",
+        "name": siteName,
+        "logo": {"@type":"ImageObject","url": `${siteUrl}/logo.png`}
+      }
+    })}
+  </script>
+</BaseLayout>
